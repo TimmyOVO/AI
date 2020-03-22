@@ -16,6 +16,8 @@
 
 import math
 import random
+import matplotlib.pyplot as plt
+import numpy
 
 
 class GA:
@@ -27,18 +29,18 @@ class GA:
         pass
 
     def start(self):
-        for i in range(0xFFFFFFF):
+        for i in range(150):
             self.Population.selection()
             self.Population.crossover()
             self.Population.mutation()
+            plt.plot([i], [self.Population.Individuals[0].fitness()], marker='o', markersize=3, color="red")
             print('Generation ', i, ' fitness ', self.Population.Individuals[0].fitness(), ' input ', self.Population.Individuals[0].value())
-        print(self.Population.Individuals)
 
 
 class Population:
     Individuals = []
     CrossoverRatio = 0.6
-    MutationRatio = 0.2
+    MutationRatio = 0.3
 
     def __init__(self, population_size, gene_size):
         self.Individuals = []
@@ -51,7 +53,7 @@ class Population:
             v = random.randrange(0, 100)
             if v <= (i.fitness() * 100):
                 survived_individuals.append(i)
-        survived_individuals.sort(key=lambda z: z.fitness())
+        survived_individuals.sort(key=lambda z: z.fitness(), reverse=True)
         self.Individuals = survived_individuals
 
     def crossover(self):
@@ -92,3 +94,8 @@ class Individual:
 
 
 GA().start()
+
+x = numpy.linspace(0,15)
+y = numpy.sin(x)
+plt.plot(x,y)
+plt.show()
