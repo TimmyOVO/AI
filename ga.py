@@ -122,4 +122,5 @@ GA().start()
 x = numpy.linspace(Round[0], Round[1])
 y = 3 * numpy.sin(x) * 7 * numpy.cos(x) + 4 * x
 plt.plot(x, y)
+plt.title('f(x) = 3sin(x) * 7cos(x) + 4x')
 plt.show()
