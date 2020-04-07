@@ -7,40 +7,45 @@
 # Algorithm should be terminates if the population has converged
 
 # def the_function(z):
-#     return math.sin(z)
+#     return 3 * numpy.sin(z) * 7 * numpy.cos(z) + 4 * z
 #
 
 # 1 bit for the sign of number ,0 positive 1 negative
 # 8 bits for the exponent
 # 23 bits for the mantissa
 
-import math
 import random
+import struct
+from codecs import decode
+
 import matplotlib.pyplot as plt
 import numpy
 
+Round = [0, 2000]
 
 class GA:
-    PopulationSize = 1000
-    GeneSize = 20
+    PopulationSize = 10000
+    GeneSize = 64
 
     def __init__(self):
         self.Population = Population(self.PopulationSize, self.GeneSize)
         pass
 
     def start(self):
-        for i in range(150):
+        for i in range(Round[1]):
             self.Population.selection()
             self.Population.crossover()
             self.Population.mutation()
-            plt.plot([i], [self.Population.Individuals[0].fitness()], marker='o', markersize=3, color="red")
-            print('Generation ', i, ' fitness ', self.Population.Individuals[0].fitness(), ' input ', self.Population.Individuals[0].value())
+            if not (len(self.Population.Individuals) == 0):
+                plt.plot([i], [self.Population.Individuals[0].fitness()], marker='o', markersize=3, color="red")
+                print('Generation ', i, ' fitness ', self.Population.Individuals[0].fitness(), ' input ',
+                      self.Population.Individuals[0].value())
 
 
 class Population:
     Individuals = []
-    CrossoverRatio = 0.6
-    MutationRatio = 0.3
+    CrossoverRatio = 0.7
+    MutationRatio = 0.1
 
     def __init__(self, population_size, gene_size):
         self.Individuals = []
@@ -51,9 +56,11 @@ class Population:
         survived_individuals = []
         for i in self.Individuals:
             v = random.randrange(0, 100)
-            if v <= (i.fitness() * 100):
+            if v <= (i.fitness()):
                 survived_individuals.append(i)
         survived_individuals.sort(key=lambda z: z.fitness(), reverse=True)
+        if len(survived_individuals) >= 500:
+            survived_individuals = survived_individuals[:500]
         self.Individuals = survived_individuals
 
     def crossover(self):
@@ -65,7 +72,7 @@ class Population:
     def mutation(self):
         for _ in range(int(len(self.Individuals) * self.MutationRatio)):
             target = random.choice(self.Individuals)
-            for _ in range(int(len(target.Genes) / 5)):
+            for _ in range(int(len(target.Genes) / 10)):
                 target.Genes[random.randrange(0, len(target.Genes))] = random.randrange(0, 2)
 
 
@@ -86,16 +93,33 @@ class Individual:
 
     def value(self):
         temp = [str(iz) for iz in self.Genes]
-        v = int('0b' + ''.join(temp), 2)
+        v = bin_to_float(''.join(temp))
         return v
 
     def fitness(self):
-        return math.sin(self.value())
+        v = self.value()
+        if v < Round[0] or v > Round[1]:
+            return -100
+        return 3 * numpy.sin(v) * 7 * numpy.cos(v) + 4 * v
+
+
+def bin_to_float(b):
+    bf = int_to_bytes(int(b, 2), 8)
+    return struct.unpack('>d', bf)[0]
+
+
+def int_to_bytes(n, length):
+    return decode('%%0%dx' % (length << 1) % n, 'hex')[-length:]
+
+
+def float_to_bin(value):
+    [d] = struct.unpack(">Q", struct.pack(">d", value))
+    return '{:064b}'.format(d)
 
 
 GA().start()
 
-x = numpy.linspace(0,15)
-y = numpy.sin(x)
-plt.plot(x,y)
+x = numpy.linspace(Round[0], Round[1])
+y = 3 * numpy.sin(x) * 7 * numpy.cos(x) + 4 * x
+plt.plot(x, y)
 plt.show()
