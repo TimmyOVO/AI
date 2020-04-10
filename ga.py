@@ -6,8 +6,8 @@
 # Make their child mutation
 # Algorithm should be terminates if the population has converged
 
-# def the_function(z):
-#     return 3 * numpy.sin(z) * 7 * numpy.cos(z) + 4 * z
+# def the_function(x):
+#     return 3 * numpy.sin(x) - 7 * numpy.cos(x) + 4 * x
 #
 
 # 1 bit for the sign of number ,0 positive 1 negative
@@ -21,31 +21,37 @@ from codecs import decode
 import matplotlib.pyplot as plt
 import numpy
 
-Round = [0, 2000]
+Round = [0, 20]
+MaxGeneration = 100
+PopulationSize = 10000
+GeneSize = 64
+
 
 class GA:
-    PopulationSize = 10000
-    GeneSize = 64
 
     def __init__(self):
-        self.Population = Population(self.PopulationSize, self.GeneSize)
+        self.Population = Population(PopulationSize, GeneSize)
         pass
 
     def start(self):
-        for i in range(Round[1]):
+        max_value = 0
+        for i in range(MaxGeneration):
             self.Population.selection()
             self.Population.crossover()
             self.Population.mutation()
-            if not (len(self.Population.Individuals) == 0):
-                plt.plot([i], [self.Population.Individuals[0].fitness()], marker='o', markersize=3, color="red")
-                print('Generation ', i, ' fitness ', self.Population.Individuals[0].fitness(), ' input ',
-                      self.Population.Individuals[0].value())
+            if max_value <= self.Population.Individuals[0].fitness():
+                max_value = self.Population.Individuals[0].fitness()
+            plt.plot([i * (Round[1] / MaxGeneration)], [self.Population.Individuals[0].fitness()], marker='o',
+                     markersize=3, color="red")
+            print('Generation ', i, ' fitness ', self.Population.Individuals[0].fitness(), ' input ',
+                  self.Population.Individuals[0].value())
+        print("Max Value ", max_value)
 
 
 class Population:
     Individuals = []
     CrossoverRatio = 0.7
-    MutationRatio = 0.1
+    MutationRatio = 0.2
 
     def __init__(self, population_size, gene_size):
         self.Individuals = []
@@ -59,8 +65,8 @@ class Population:
             if v <= (i.fitness()):
                 survived_individuals.append(i)
         survived_individuals.sort(key=lambda z: z.fitness(), reverse=True)
-        if len(survived_individuals) >= 500:
-            survived_individuals = survived_individuals[:500]
+        if len(survived_individuals) >= PopulationSize:
+            survived_individuals = survived_individuals[:PopulationSize]
         self.Individuals = survived_individuals
 
     def crossover(self):
@@ -68,12 +74,20 @@ class Population:
             p1 = random.choice(self.Individuals)
             p2 = random.choice(self.Individuals)
             self.Individuals.append(p1.crossover(p2))
+        self.Individuals.sort(key=lambda z: z.fitness(), reverse=True)
 
     def mutation(self):
         for _ in range(int(len(self.Individuals) * self.MutationRatio)):
-            target = random.choice(self.Individuals)
+            target = Individual(GeneSize)
+            target.Genes = random.choice(self.Individuals).Genes
             for _ in range(int(len(target.Genes) / 10)):
                 target.Genes[random.randrange(0, len(target.Genes))] = random.randrange(0, 2)
+            self.Individuals.append(target)
+        ll = len(self.Individuals)
+        if ll < PopulationSize:
+            for _ in range(PopulationSize - ll):
+                self.Individuals.append(Individual(GeneSize))
+        self.Individuals.sort(key=lambda z: z.fitness(), reverse=True)
 
 
 class Individual:
@@ -100,7 +114,7 @@ class Individual:
         v = self.value()
         if v < Round[0] or v > Round[1]:
             return -100
-        return 3 * numpy.sin(v) * 7 * numpy.cos(v) + 4 * v
+        return 3 * numpy.sin(v) - 7 * numpy.cos(v) + 4 * v
 
 
 def bin_to_float(b):
@@ -120,7 +134,7 @@ def float_to_bin(value):
 GA().start()
 
 x = numpy.linspace(Round[0], Round[1])
-y = 3 * numpy.sin(x) * 7 * numpy.cos(x) + 4 * x
+y = 3 * numpy.sin(x) - 7 * numpy.cos(x) + 4 * x
 plt.plot(x, y)
-plt.title('f(x) = 3sin(x) * 7cos(x) + 4x')
+plt.title('f(x) = 3sin(x) - 7cos(x) + 4x')
 plt.show()
